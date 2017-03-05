@@ -86,20 +86,6 @@ usbjtag-%.hex: temp-%.hex
 ${LIBDIR}/${LIB}:
 	make -C ${LIBDIR} CC=$(CC) AR=$(AR)
 
-.PHONY: boot
-boot: std.hex
-	-test -e /dev/usb_jtag    && /sbin/fxload -D /dev/usb_jtag    -I std.hex -t fx2
-	-test -e /dev/tracii_xl2  && /sbin/fxload -D /dev/tracii_xl2  -I std.hex -t fx2
-	-test -e /dev/xilinx_xpcu && /sbin/fxload -D /dev/xilinx_xpcu -I std.hex -t fx2
-
-REF=/home/kawk/work/xilinx/xtern/xusbdfwu/xusbdfwu-1025.hex
-
-.PHONY: ref
-ref: 
-	-test -e /dev/usb_jtag    && /sbin/fxload -D /dev/usb_jtag    -I ${REF} -t fx2
-	-test -e /dev/tracii_xl2  && /sbin/fxload -D /dev/tracii_xl2  -I ${REF} -t fx2
-	-test -e /dev/xilinx_xpcu && /sbin/fxload -D /dev/xilinx_xpcu -I ${REF} -t fx2
-
 dscr_%.rel: dscr_%.a51
 eeprom.rel: eeprom.c eeprom.h
 usbjtag.rel: usbjtag.c hardware.h eeprom.h
