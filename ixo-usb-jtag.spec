@@ -4,7 +4,7 @@ Release:        1%{?dist}
 Summary:        Firmware for USB JTAG programmers based on the Cypress FX2
 License:        GPLv2+
 URL:            https://github.com/mithro/ixo-usb-jtag
-Source0:        %{url}/archive/v%{version}.tar.gz
+Source0:        %{name}-%{version}.tar.gz
 BuildArch:      noarch
 BuildRequires:  sdcc
 
