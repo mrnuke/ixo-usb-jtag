@@ -16,7 +16,7 @@
 # St, Fifth Floor, Boston, MA  02110-1301  USA
 #-----------------------------------------------------------------------------
 
-LIBDIR=fx2
+LIBDIR=fx2lib
 LIB=libfx2.lib
 
 SHELL := /bin/bash
@@ -37,7 +37,7 @@ AS = $(SDCC_PREFIX)sdas8051
 AR = $(SDCC_PREFIX)sdcclib
 PACKIHX=$(SDCC_PREFIX)packihx
 
-CFLAGS+=-mmcs51 --no-xinit-opt -I${LIBDIR}
+CFLAGS+=-mmcs51 --no-xinit-opt -I${LIBDIR}/include
 
 ASFLAGS+=-plosgff
 
@@ -84,7 +84,7 @@ usbjtag-%.hex: temp-%.hex
 	ls -al $@
 
 ${LIBDIR}/${LIB}:
-	make -C ${LIBDIR} CC=$(CC) AR=$(AR)
+	make -C ${LIBDIR} SDCC=$(CC) SDAR=$(AR) SDAS=$(AS)
 
 .PHONY: boot
 boot: std.hex

@@ -19,19 +19,23 @@
  *-----------------------------------------------------------------------------
  */
 
-#include "isr.h"
-#include "timer.h"
-#include "delay.h"
-#include "fx2regs.h"
-#include "fx2utils.h"
-#include "usb_common.h"
-#include "usb_descriptors.h"
-#include "usb_requests.h"
-
-#include "syncdelay.h"
+#include <delay.h>
+#include <fx2regs.h>
+#include <fx2macros.h>
+#include <setupdat.h>
 
 #include "eeprom.h"
 #include "hardware.h"
+
+/* FIXME: Find a better place to defuine these */
+#define SYNCDELAY		SYNCDELAY3
+#define bRequestType		SETUPDAT[0]
+#define bRequest		SETUPDAT[1]
+#define wIndexL			SETUPDAT[4]
+#define wLengthL		SETUPDAT[6]
+
+#define bmRT_DIR_MASK		(0x1 << 7)
+#define bmRT_DIR_OUT		(0 << 7)
 
 //-----------------------------------------------------------------------------
 // Define USE_MOD256_OUTBUFFER:
@@ -46,7 +50,6 @@
 //-----------------------------------------------------------------------------
 // Global data
 
-typedef bit BOOL;
 #define FALSE 0
 #define TRUE  1
 static BOOL Running;
@@ -67,10 +70,10 @@ static WORD Pending;
   /* Size of output buffer must be exactly 256 */
   #define OUTBUFFER_LEN 0x100
   /* Output buffer must begin at some address with lower 8 bits all zero */
-  xdata at 0xE000 BYTE OutBuffer[OUTBUFFER_LEN];
+  __xdata __at 0xE000 BYTE OutBuffer[OUTBUFFER_LEN];
 #else
   #define OUTBUFFER_LEN 0x200
-  static xdata BYTE OutBuffer[OUTBUFFER_LEN];
+  static __xdata BYTE OutBuffer[OUTBUFFER_LEN];
 #endif
 
 //-----------------------------------------------------------------------------
@@ -247,17 +250,17 @@ void usb_jtag_activity(void) // Called repeatedly while the device is idle
          o = n;
 
 #ifdef USE_MOD256_OUTBUFFER
-         APTR1H = MSB( OutBuffer );
-         APTR1L = FirstDataInOutBuffer;
+         AUTOPTRH1 = MSB( OutBuffer );
+         AUTOPTRL1 = FirstDataInOutBuffer;
          while(n--)
          {
             XAUTODAT2 = XAUTODAT1;
-            APTR1H = MSB( OutBuffer ); // Stay within 256-Byte-Buffer
+            AUTOPTRH1 = MSB( OutBuffer ); // Stay within 256-Byte-Buffer
          };
-         FirstDataInOutBuffer = APTR1L;
+         FirstDataInOutBuffer = AUTOPTRL1;
 #else
-         APTR1H = MSB( &(OutBuffer[FirstDataInOutBuffer]) );
-         APTR1L = LSB( &(OutBuffer[FirstDataInOutBuffer]) );
+         AUTOPTRH1 = MSB( &(OutBuffer[FirstDataInOutBuffer]) );
+         AUTOPTRL1 = LSB( &(OutBuffer[FirstDataInOutBuffer]) );
          while(n--)
          {
             XAUTODAT2 = XAUTODAT1;
@@ -265,8 +268,8 @@ void usb_jtag_activity(void) // Called repeatedly while the device is idle
             if(++FirstDataInOutBuffer >= OUTBUFFER_LEN)
             {
                FirstDataInOutBuffer = 0;
-               APTR1H = MSB( OutBuffer );
-               APTR1L = LSB( OutBuffer );
+               AUTOPTRH1 = MSB( OutBuffer );
+               AUTOPTRL1 = LSB( OutBuffer );
             };
          };
 #endif
@@ -289,8 +292,8 @@ void usb_jtag_activity(void) // Called repeatedly while the device is idle
       //BYTE i, n = EP2BCL; // bugfix by Sune Mai (Oct 2008, https://sourceforge.net/projects/urjtag/forums/forum/682993/topic/2312452)
       WORD i, n = EP2BCL|EP2BCH<<8;
 
-      APTR1H = MSB( EP2FIFOBUF );
-      APTR1L = LSB( EP2FIFOBUF );
+      AUTOPTRH1 = MSB( EP2FIFOBUF );
+      AUTOPTRL1 = LSB( EP2FIFOBUF );
 
       for(i=0;i<n;)
       {
@@ -352,7 +355,7 @@ unsigned char app_vendor_cmd(void)
 
   if ((bRequestType & bmRT_DIR_MASK) == bmRT_DIR_OUT)
   {
-    if(bRequest == RQ_GET_STATUS)
+    if(bRequest == GET_STATUS)
     {
       Running = 1;
     };
