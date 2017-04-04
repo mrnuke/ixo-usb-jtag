@@ -357,6 +357,10 @@ __sfr __at 0xAA EP2468STAT;
 __sfr __at 0xAB EP24FIFOFLGS;
 __sfr __at 0xAC EP68FIFOFLGS;
 __sfr __at 0xAF AUTOPTRSETUP;
+	__sbit __at 0xAF+0 EXTACC;
+	__sbit __at 0xAF+1 APTR1FZ;
+	__sbit __at 0xAF+2 APTR2FZ;
+
 __sfr __at 0xB0 IOD;
          /*  IOD  */
          __sbit __at 0xB0 + 0 PD0;
