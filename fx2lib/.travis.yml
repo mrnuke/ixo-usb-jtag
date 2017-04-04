@@ -1,0 +1,21 @@
+language: c
+sudo: required
+
+install:
+  - # Add PPA with newer version of sdcc backported to precise.
+  - sudo add-apt-repository -y ppa:mithro/sdcc-precise
+  - sudo apt-get update
+  - # Need libusb-dev for fx2loader and other tools
+  - sudo apt-get install -y libusb-1.0-0-dev
+  - # Install sdcc
+  - sudo apt-get install --force-yes -y sdcc
+  - sdcc --version
+  - # doxygen & rubber are needed for generating the documentation
+  - sudo apt-get install -y doxygen rubber
+
+script:
+  - make
+  - make docs
+
+after_success:
+  - ./.travis-push-docs.sh
