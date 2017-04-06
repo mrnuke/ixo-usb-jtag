@@ -37,6 +37,58 @@
 #define bmRT_DIR_MASK		(0x1 << 7)
 #define bmRT_DIR_OUT		(0 << 7)
 
+static void fx2_renumerate(void)
+{
+	RENUMERATE_UNCOND();
+}
+
+static void setup_autovectors(void)
+{
+	// disable master usb and fifo/gpif interrupt enables
+	EUSB = 0;
+	EIEX4 = 0;
+
+	hook_sv (SV_INT_2, (unsigned short) _usb_autovector);
+	hook_sv (SV_INT_4, (unsigned short) _fifo_gpif_autovector);
+
+	// disable all fifo interrupt enables
+	SYNCDELAY;
+	EP2FIFOIE = 0;	SYNCDELAY;
+	EP4FIFOIE = 0;	SYNCDELAY;
+	EP6FIFOIE = 0;	SYNCDELAY;
+	EP8FIFOIE = 0;	SYNCDELAY;
+
+	// clear all pending fifo irqs
+	EP2FIFOIRQ = 0xff;	SYNCDELAY;
+	EP4FIFOIRQ = 0xff;	SYNCDELAY;
+	EP6FIFOIRQ = 0xff;	SYNCDELAY;
+	EP8FIFOIRQ = 0xff;	SYNCDELAY;
+
+	IBNIE  = 0;
+	IBNIRQ = 0xff;
+	NAKIE  = 0;
+	NAKIRQ = 0xff;
+	USBIE  = 0;
+	USBIRQ = 0xff;
+	EPIE   = 0;
+	EPIRQ  = 0xff;
+	SYNCDELAY;	GPIFIE = 0;
+	SYNCDELAY;	GPIFIRQ = 0xff;
+	USBERRIE = 0;
+	USBERRIRQ = 0xff;
+	CLRERRCNT = 0;
+
+	INTSETUP = bmAV2EN | bmAV4EN | bmINT4IN;
+
+	// clear master irq's for usb and fifo/gpif
+	EXIF &= ~bmEXIF_USBINT;
+	EXIF &= ~bmEXIF_IE4;
+
+	// enable master usb and fifo/gpif interrrupts
+	EUSB = 1;
+	EIEX4 = 1;
+}
+
 //-----------------------------------------------------------------------------
 // Define USE_MOD256_OUTBUFFER:
 // Saves about 256 bytes in code size, improves speed a little.
